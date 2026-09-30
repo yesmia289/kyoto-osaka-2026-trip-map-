@@ -8,6 +8,14 @@ import {
   setSheetExpanded,
 } from './trip-model.js';
 import { captureInteractiveFocus, restoreInteractiveFocus } from './focus-management.js';
+import {
+  EDIT_STORAGE_KEY,
+  deleteStop,
+  insertStopAfter,
+  parseSavedItinerary,
+  serializeItinerary,
+  updateStop,
+} from './editor-model.js';
 
 const elements = {
   currentDayNumber: document.querySelector('#current-day-number'),
@@ -22,9 +30,44 @@ const elements = {
   sheetHandle: document.querySelector('#sheet-handle'),
   mapFallback: document.querySelector('#map-fallback'),
   leafletScript: document.querySelector('#leaflet-script'),
+  editStatus: document.querySelector('#edit-status'),
+  editToggle: document.querySelector('#edit-toggle'),
+  editorToolbar: document.querySelector('#editor-toolbar'),
+  addStop: document.querySelector('#add-stop'),
+  editStop: document.querySelector('#edit-stop'),
+  deleteStop: document.querySelector('#delete-stop'),
+  exportEdits: document.querySelector('#export-edits'),
+  resetEdits: document.querySelector('#reset-edits'),
+  editorDialog: document.querySelector('#stop-editor'),
+  editorForm: document.querySelector('#stop-editor-form'),
+  editorTitle: document.querySelector('#editor-title'),
+  editorDayLabel: document.querySelector('#editor-day-label'),
+  editorMode: document.querySelector('#editor-mode'),
+  editorTime: document.querySelector('#editor-time'),
+  editorName: document.querySelector('#editor-name'),
+  editorSummary: document.querySelector('#editor-summary'),
+  editorDetail: document.querySelector('#editor-detail'),
+  editorLatitude: document.querySelector('#editor-latitude'),
+  editorLongitude: document.querySelector('#editor-longitude'),
+  editorOfficialUrl: document.querySelector('#editor-official-url'),
+  editorNavigationUrl: document.querySelector('#editor-navigation-url'),
+  editorError: document.querySelector('#editor-error'),
+  closeEditor: document.querySelector('#close-editor'),
+  cancelEditor: document.querySelector('#cancel-editor'),
+  editToast: document.querySelector('#edit-toast'),
 };
 
-let state = createInitialState(ITINERARY_DAYS);
+let savedItinerary = '';
+try {
+  savedItinerary = window.localStorage.getItem(EDIT_STORAGE_KEY) || '';
+} catch {
+  savedItinerary = '';
+}
+
+let state = createInitialState(parseSavedItinerary(savedItinerary, ITINERARY_DAYS));
+let editMode = false;
+let hasLocalEdits = Boolean(savedItinerary);
+let toastTimer;
 
 function escapeHtml(value = '') {
   return String(value)
@@ -103,6 +146,15 @@ function render() {
   elements.sheet.classList.toggle('is-expanded', state.sheetExpanded);
   elements.sheetHandle.setAttribute('aria-expanded', String(state.sheetExpanded));
   elements.sheetHandle.setAttribute('aria-label', state.sheetExpanded ? '收起当天行程' : '展开当天行程');
+  elements.editorToolbar.hidden = !editMode;
+  elements.editToggle.textContent = editMode ? '完成编辑' : '编辑行程';
+  elements.editToggle.setAttribute('aria-pressed', String(editMode));
+  elements.editStatus.textContent = editMode
+    ? '编辑模式 · 自动保存到此设备'
+    : hasLocalEdits ? '此设备有本地修改' : '公开行程';
+  const selectedStopExists = day.stops.some((stop) => stop.id === state.stopId);
+  elements.editStop.disabled = !selectedStopExists;
+  elements.deleteStop.disabled = !selectedStopExists;
 
   if (day.status) {
     elements.dayStatus.hidden = false;
@@ -118,6 +170,72 @@ function render() {
   renderTimeline(day);
   renderMap(day);
   restoreInteractiveFocus(focusToken, elements.dayTabs, elements.timeline);
+}
+
+function showToast(message) {
+  window.clearTimeout(toastTimer);
+  elements.editToast.textContent = message;
+  elements.editToast.hidden = false;
+  toastTimer = window.setTimeout(() => {
+    elements.editToast.hidden = true;
+  }, 2600);
+}
+
+function persistDays(days) {
+  try {
+    window.localStorage.setItem(EDIT_STORAGE_KEY, serializeItinerary(days));
+    hasLocalEdits = true;
+    return true;
+  } catch {
+    showToast('浏览器无法保存修改，请先导出备份。');
+    return false;
+  }
+}
+
+function closeEditor() {
+  if (typeof elements.editorDialog.close === 'function') elements.editorDialog.close();
+  else elements.editorDialog.removeAttribute('open');
+}
+
+function openEditor(mode) {
+  const day = getDayById(state.dayId, state.days);
+  const stop = day?.stops.find((candidate) => candidate.id === state.stopId);
+  if (!day || (mode === 'edit' && !stop)) return;
+
+  elements.editorForm.reset();
+  elements.editorMode.value = mode;
+  elements.editorTitle.textContent = mode === 'add' ? '新增行程项目' : '编辑行程项目';
+  elements.editorDayLabel.textContent = `${day.date} · ${day.title}`;
+  elements.editorError.hidden = true;
+  elements.editorError.textContent = '';
+
+  if (stop && mode === 'edit') {
+    elements.editorTime.value = stop.time || '';
+    elements.editorName.value = stop.name || '';
+    elements.editorSummary.value = stop.summary || '';
+    elements.editorDetail.value = stop.detail || '';
+    elements.editorLatitude.value = stop.coordinates?.[0] ?? '';
+    elements.editorLongitude.value = stop.coordinates?.[1] ?? '';
+    elements.editorOfficialUrl.value = stop.officialUrl || '';
+    elements.editorNavigationUrl.value = stop.navigationUrl || '';
+  }
+
+  if (typeof elements.editorDialog.showModal === 'function') elements.editorDialog.showModal();
+  else elements.editorDialog.setAttribute('open', '');
+  window.setTimeout(() => elements.editorName.focus(), 0);
+}
+
+function formDraft() {
+  return {
+    time: elements.editorTime.value,
+    name: elements.editorName.value,
+    summary: elements.editorSummary.value,
+    detail: elements.editorDetail.value,
+    latitude: elements.editorLatitude.value,
+    longitude: elements.editorLongitude.value,
+    officialUrl: elements.editorOfficialUrl.value,
+    navigationUrl: elements.editorNavigationUrl.value,
+  };
 }
 
 let map;
@@ -238,6 +356,84 @@ elements.sheetHandle.addEventListener('pointerup', (event) => {
 elements.sheetHandle.addEventListener('pointercancel', () => {
   dragStartY = undefined;
   dragHandled = false;
+});
+
+elements.editToggle.addEventListener('click', () => {
+  editMode = !editMode;
+  if (editMode) state = setSheetExpanded(state, true);
+  render();
+});
+
+elements.addStop.addEventListener('click', () => openEditor('add'));
+elements.editStop.addEventListener('click', () => openEditor('edit'));
+elements.closeEditor.addEventListener('click', closeEditor);
+elements.cancelEditor.addEventListener('click', closeEditor);
+
+elements.editorDialog.addEventListener('click', (event) => {
+  if (event.target === elements.editorDialog) closeEditor();
+});
+
+elements.editorForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const mode = elements.editorMode.value;
+  try {
+    if (mode === 'add') {
+      const newId = `custom-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+      const days = insertStopAfter(state.days, state.dayId, state.stopId, formDraft(), newId);
+      state = { ...state, days, stopId: newId };
+    } else {
+      const days = updateStop(state.days, state.dayId, state.stopId, formDraft());
+      state = { ...state, days };
+    }
+    persistDays(state.days);
+    closeEditor();
+    render();
+    showToast(mode === 'add' ? '已新增并保存到此设备' : '修改已保存到此设备');
+  } catch (error) {
+    elements.editorError.textContent = error instanceof Error ? error.message : '无法保存，请检查输入。';
+    elements.editorError.hidden = false;
+  }
+});
+
+elements.deleteStop.addEventListener('click', () => {
+  const day = getDayById(state.dayId, state.days);
+  const index = day?.stops.findIndex((stop) => stop.id === state.stopId) ?? -1;
+  if (!day || index < 0) return;
+  const stop = day.stops[index];
+  if (!window.confirm(`确定删除“${stop.name}”吗？可用“恢复公开版”撤销全部本地修改。`)) return;
+
+  const nextStopId = day.stops[index + 1]?.id || day.stops[index - 1]?.id || '';
+  const days = deleteStop(state.days, state.dayId, state.stopId);
+  state = { ...state, days, stopId: nextStopId };
+  persistDays(days);
+  render();
+  showToast('项目已从此设备删除');
+});
+
+elements.exportEdits.addEventListener('click', () => {
+  const blob = new Blob([serializeItinerary(state.days)], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `kyoto-osaka-trip-edits-${new Date().toISOString().slice(0, 10)}.json`;
+  anchor.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  showToast('修改文件已导出');
+});
+
+elements.resetEdits.addEventListener('click', () => {
+  if (!window.confirm('确定清除这台设备上的全部修改，恢复公开版本吗？')) return;
+  try {
+    window.localStorage.removeItem(EDIT_STORAGE_KEY);
+  } catch {
+    showToast('浏览器无法清除本地修改。');
+    return;
+  }
+  state = createInitialState(parseSavedItinerary('', ITINERARY_DAYS));
+  hasLocalEdits = false;
+  editMode = false;
+  render();
+  showToast('已恢复公开版本');
 });
 
 render();

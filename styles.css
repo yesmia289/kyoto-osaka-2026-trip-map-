@@ -254,6 +254,36 @@ a:focus-visible {
   background: #c6cec8;
 }
 
+.sheet-mode-bar {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -3px 0 8px;
+  color: var(--muted);
+  font-size: 0.69rem;
+  font-weight: 750;
+}
+
+.compact-button,
+.editor-action,
+.icon-button {
+  min-height: 44px;
+  border: 1px solid rgba(23, 63, 44, 0.16);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--green);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.compact-button {
+  flex: 0 0 auto;
+  padding: 8px 13px;
+  border-color: var(--green);
+}
+
 .sheet-heading {
   display: flex;
   flex-wrap: wrap;
@@ -324,6 +354,52 @@ a:focus-visible {
   border-radius: 50%;
   background: var(--vermilion);
   box-shadow: 0 0 0 4px rgba(228, 93, 60, 0.13);
+}
+
+.editor-toolbar[hidden] {
+  display: none;
+}
+
+.editor-toolbar {
+  margin: 12px 0 4px;
+  padding: 14px;
+  border: 1px solid rgba(23, 63, 44, 0.12);
+  border-radius: 15px;
+  background: var(--sage-light);
+}
+
+.editor-toolbar p {
+  margin: 0 0 11px;
+  color: var(--green-soft);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.editor-toolbar__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.editor-action {
+  padding: 9px 11px;
+  font-size: 0.74rem;
+}
+
+.editor-action--primary {
+  border-color: var(--green);
+  background: var(--green);
+  color: var(--paper);
+}
+
+.editor-action--danger {
+  border-color: rgba(156, 59, 36, 0.25);
+  color: var(--warning-text);
+}
+
+.editor-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .timeline {
@@ -521,6 +597,142 @@ a:focus-visible {
   font-size: 0.72rem !important;
   font-weight: 800 !important;
   box-shadow: 0 8px 20px rgba(20, 47, 34, 0.14) !important;
+}
+
+.stop-editor {
+  width: min(calc(100% - 24px), 480px);
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 22px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 24px 80px rgba(15, 35, 25, 0.3);
+}
+
+.stop-editor::backdrop {
+  background: rgba(15, 35, 25, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+.stop-editor__form {
+  max-height: calc(100dvh - 24px);
+  padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+
+.stop-editor__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.stop-editor__heading p {
+  margin: 0 0 4px;
+  color: var(--green-soft);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.stop-editor__heading h2 {
+  margin: 0;
+  color: var(--green);
+  font-size: 1.35rem;
+}
+
+.icon-button {
+  width: 44px;
+  padding: 0;
+  font-size: 1.4rem;
+}
+
+.stop-editor label {
+  display: grid;
+  gap: 6px;
+  margin-top: 13px;
+  color: var(--green-soft);
+  font-size: 0.73rem;
+  font-weight: 800;
+}
+
+.stop-editor input,
+.stop-editor textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #ccd7cf;
+  border-radius: 11px;
+  background: #fbfcfb;
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.stop-editor textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.stop-editor input:focus,
+.stop-editor textarea:focus {
+  border-color: var(--green);
+  outline: 3px solid rgba(23, 63, 44, 0.12);
+}
+
+.coordinate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.field-help,
+.editor-error {
+  margin: 7px 0 0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.field-help {
+  color: var(--muted);
+}
+
+.editor-error {
+  color: var(--warning-text);
+  font-weight: 800;
+}
+
+.stop-editor__actions {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.edit-toast {
+  position: fixed;
+  z-index: 1400;
+  right: 18px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  left: 18px;
+  width: fit-content;
+  max-width: min(420px, calc(100% - 36px));
+  margin: 0 auto;
+  padding: 11px 15px;
+  border-radius: 12px;
+  background: var(--green);
+  color: var(--paper);
+  box-shadow: 0 12px 30px rgba(15, 35, 25, 0.22);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.edit-toast[hidden] {
+  display: none;
 }
 
 @media (min-width: 700px) {

@@ -41,6 +41,11 @@
           <span aria-hidden="true"></span>
         </button>
 
+        <div class="sheet-mode-bar">
+          <span id="edit-status">公开行程</span>
+          <button id="edit-toggle" class="compact-button" type="button">编辑行程</button>
+        </div>
+
         <div class="sheet-heading">
           <div>
             <p id="day-meta" class="sheet-heading__meta"></p>
@@ -55,9 +60,53 @@
           <strong id="day-route"></strong>
         </div>
 
+        <section id="editor-toolbar" class="editor-toolbar" aria-label="行程编辑工具" hidden>
+          <p>修改仅保存在这台设备。新增项目会插入在当前选中项目之后。</p>
+          <div class="editor-toolbar__actions">
+            <button id="add-stop" class="editor-action editor-action--primary" type="button">＋ 新增一项</button>
+            <button id="edit-stop" class="editor-action" type="button">编辑当前项</button>
+            <button id="delete-stop" class="editor-action editor-action--danger" type="button">删除当前项</button>
+            <button id="export-edits" class="editor-action" type="button">导出修改</button>
+            <button id="reset-edits" class="editor-action" type="button">恢复公开版</button>
+          </div>
+        </section>
+
         <ol id="timeline" class="timeline" aria-label="当天时间线"></ol>
       </section>
     </main>
+
+    <dialog id="stop-editor" class="stop-editor" aria-labelledby="editor-title">
+      <form id="stop-editor-form" class="stop-editor__form">
+        <div class="stop-editor__heading">
+          <div>
+            <p id="editor-day-label"></p>
+            <h2 id="editor-title">编辑行程项目</h2>
+          </div>
+          <button id="close-editor" class="icon-button" type="button" aria-label="关闭编辑窗口">×</button>
+        </div>
+
+        <input id="editor-mode" name="mode" type="hidden" value="edit">
+        <label>时间<input id="editor-time" name="time" type="text" placeholder="例如 14:30 或 弹性"></label>
+        <label>地点或项目名称（必填）<input id="editor-name" name="name" type="text" required maxlength="80"></label>
+        <label>一句话摘要<input id="editor-summary" name="summary" type="text" maxlength="160"></label>
+        <label>详细说明<textarea id="editor-detail" name="detail" rows="3" maxlength="500"></textarea></label>
+        <div class="coordinate-grid">
+          <label>纬度<input id="editor-latitude" name="latitude" type="number" step="any" min="-90" max="90" inputmode="decimal" placeholder="35.0116"></label>
+          <label>经度<input id="editor-longitude" name="longitude" type="number" step="any" min="-180" max="180" inputmode="decimal" placeholder="135.7681"></label>
+        </div>
+        <p class="field-help">坐标可留空；填入后会显示地图标记。经纬度需要同时填写。</p>
+        <label>官方信息链接<input id="editor-official-url" name="officialUrl" type="url" inputmode="url" placeholder="https://…"></label>
+        <label>自定义导航链接<input id="editor-navigation-url" name="navigationUrl" type="url" inputmode="url" placeholder="https://…"></label>
+        <p id="editor-error" class="editor-error" role="alert" hidden></p>
+
+        <div class="stop-editor__actions">
+          <button id="cancel-editor" class="editor-action" type="button">取消</button>
+          <button class="editor-action editor-action--primary" type="submit">保存修改</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="edit-toast" class="edit-toast" role="status" aria-live="polite" hidden></div>
 
     <noscript>请启用 JavaScript 查看日期切换与地图；行程数据保存在 itinerary-data.js。</noscript>
     <script type="module" src="app.js"></script>

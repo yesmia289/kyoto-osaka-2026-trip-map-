@@ -7,7 +7,7 @@ test('the static site serves its accessible shell and module assets', async (t) 
   const server = await startStaticServer(new URL('..', import.meta.url));
   t.after(() => server.close());
 
-  const paths = ['/', '/leaflet-base.css', '/styles.css', '/app.js', '/itinerary-data.js'];
+  const paths = ['/', '/leaflet-base.css', '/styles.css', '/app.js', '/itinerary-data.js', '/editor-model.js'];
   const responses = await Promise.all(paths.map((path) => fetch(`${server.origin}${path}`)));
 
   for (const response of responses) assert.equal(response.status, 200);
@@ -31,4 +31,7 @@ test('the static site serves its accessible shell and module assets', async (t) 
   assert.match(app, /restoreInteractiveFocus/);
   assert.match(html, /id="map"/);
   assert.match(html, /id="itinerary-sheet"/);
+  assert.match(html, /id="edit-toggle"/);
+  assert.match(html, /id="editor-toolbar"/);
+  assert.match(html, /<dialog[^>]+id="stop-editor"/);
 });
