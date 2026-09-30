@@ -243,6 +243,7 @@ a:focus-visible {
   border: 0;
   background: var(--paper);
   cursor: ns-resize;
+  touch-action: none;
 }
 
 .sheet-handle span {
@@ -255,9 +256,14 @@ a:focus-visible {
 
 .sheet-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
+}
+
+.sheet-heading > div {
+  min-width: 0;
 }
 
 .sheet-heading h2 {

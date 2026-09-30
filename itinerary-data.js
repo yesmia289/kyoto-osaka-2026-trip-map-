@@ -83,7 +83,6 @@ export const ITINERARY_DAYS = [
         type: 'activity',
         summary: '店铺待选，优先酒店步行范围',
         detail: '具体店名、地址与归还时间确认后再补地图坐标；目前不放置虚假标记。',
-        coordinates: [35.00455, 135.76955],
         status: { tone: 'neutral', label: '店铺待选' },
       },
       {
@@ -131,7 +130,6 @@ export const ITINERARY_DAYS = [
         type: 'deadline',
         summary: '暂定时间，选店后确认',
         detail: '若店铺要求更早归还，需要同步提前离开岚山。',
-        coordinates: [35.00455, 135.76955],
         status: { tone: 'warning', label: '暂定18:00前' },
       },
     ],

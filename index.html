@@ -27,7 +27,7 @@
         </header>
 
         <nav class="day-switcher" aria-label="选择行程日期">
-          <div id="day-tabs" class="day-switcher__track" role="tablist"></div>
+          <div id="day-tabs" class="day-switcher__track"></div>
         </nav>
 
         <div id="map-fallback" class="map-fallback" role="status" hidden>
@@ -60,7 +60,7 @@
     </main>
 
     <noscript>请启用 JavaScript 查看日期切换与地图；行程数据保存在 itinerary-data.js。</noscript>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script type="module" src="app.js"></script>
+    <script id="leaflet-script" async src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   </body>
 </html>

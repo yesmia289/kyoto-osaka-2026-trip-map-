@@ -80,3 +80,14 @@ test('Day 1 timeline begins with HB340 even though the flight is not mapped', ()
   assert.equal(view.stops[0].id, 'hb340');
   assert.equal(view.mappableStops[0].id, 'kix-arrival');
 });
+
+test('unconfirmed kimono activities do not expose fake hotel coordinates or navigation', () => {
+  const day = buildDayView(getDayById('d2'));
+  const fitting = day.stops.find((stop) => stop.id === 'kyoto-hotel-start');
+  const returnStop = day.stops.find((stop) => stop.id === 'kyoto-hotel-return');
+
+  for (const stop of [fitting, returnStop]) {
+    assert.equal(stop.coordinates, undefined);
+    assert.equal(stop.navigationUrl, '');
+  }
+});

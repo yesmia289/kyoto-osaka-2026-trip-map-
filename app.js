@@ -7,6 +7,7 @@ import {
   selectStop,
   setSheetExpanded,
 } from './trip-model.js';
+import { captureInteractiveFocus, restoreInteractiveFocus } from './focus-management.js';
 
 const elements = {
   currentDayNumber: document.querySelector('#current-day-number'),
@@ -20,6 +21,7 @@ const elements = {
   sheet: document.querySelector('#itinerary-sheet'),
   sheetHandle: document.querySelector('#sheet-handle'),
   mapFallback: document.querySelector('#map-fallback'),
+  leafletScript: document.querySelector('#leaflet-script'),
 };
 
 let state = createInitialState(ITINERARY_DAYS);
@@ -44,10 +46,8 @@ function renderDayTabs() {
     <button
       class="day-tab"
       type="button"
-      role="tab"
       data-day-id="${escapeHtml(day.id)}"
-      aria-selected="${day.id === state.dayId}"
-      aria-controls="itinerary-sheet"
+      aria-current="${day.id === state.dayId ? 'date' : 'false'}"
     >
       <strong>D${index + 1}</strong>
       <span>${escapeHtml(day.date.replace('月', '/').replace('日', ''))}</span>
@@ -92,6 +92,7 @@ function renderTimeline(day) {
 function render() {
   const day = buildDayView(getDayById(state.dayId, state.days));
   if (!day) return;
+  const focusToken = captureInteractiveFocus(document.activeElement, elements.dayTabs, elements.timeline);
 
   const dayIndex = state.days.findIndex((candidate) => candidate.id === day.id);
   elements.currentDayNumber.textContent = String(dayIndex + 1);
@@ -116,6 +117,7 @@ function render() {
   renderDayTabs();
   renderTimeline(day);
   renderMap(day);
+  restoreInteractiveFocus(focusToken, elements.dayTabs, elements.timeline);
 }
 
 let map;
@@ -239,3 +241,8 @@ elements.sheetHandle.addEventListener('pointercancel', () => {
 });
 
 render();
+
+elements.leafletScript?.addEventListener('load', () => {
+  const day = buildDayView(getDayById(state.dayId, state.days));
+  if (day) renderMap(day);
+});
