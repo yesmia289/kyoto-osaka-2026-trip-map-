@@ -8,11 +8,13 @@ import {
   setSheetExpanded,
 } from './trip-model.js';
 import { captureInteractiveFocus, restoreInteractiveFocus } from './focus-management.js';
+import { escapeHtml } from './html-utils.js';
 import {
   EDIT_STORAGE_KEY,
   deleteStop,
   insertStopAfter,
-  parseSavedItinerary,
+  loadSavedItinerary,
+  saveItineraryToStorage,
   serializeItinerary,
   updateStop,
 } from './editor-model.js';
@@ -64,19 +66,13 @@ try {
   savedItinerary = '';
 }
 
-let state = createInitialState(parseSavedItinerary(savedItinerary, ITINERARY_DAYS));
+const loadedItinerary = loadSavedItinerary(savedItinerary, ITINERARY_DAYS);
+let state = createInitialState(loadedItinerary.days);
 let editMode = false;
-let hasLocalEdits = Boolean(savedItinerary);
+let hasLocalEdits = loadedItinerary.valid;
+let hasUnsavedChanges = false;
+let storageRecoveryNeeded = Boolean(savedItinerary) && !loadedItinerary.valid;
 let toastTimer;
-
-function escapeHtml(value = '') {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
 
 function externalLink(url, label, primary = false) {
   if (!url) return '';
@@ -149,9 +145,13 @@ function render() {
   elements.editorToolbar.hidden = !editMode;
   elements.editToggle.textContent = editMode ? '完成编辑' : '编辑行程';
   elements.editToggle.setAttribute('aria-pressed', String(editMode));
-  elements.editStatus.textContent = editMode
-    ? '编辑模式 · 自动保存到此设备'
-    : hasLocalEdits ? '此设备有本地修改' : '公开行程';
+  elements.editStatus.textContent = hasUnsavedChanges
+    ? '有未保存修改 · 请导出备份'
+    : editMode
+      ? '编辑模式 · 自动保存到此设备'
+      : storageRecoveryNeeded
+        ? '本地修改损坏 · 已载入公开版'
+        : hasLocalEdits ? '此设备有本地修改' : '公开行程';
   const selectedStopExists = day.stops.some((stop) => stop.id === state.stopId);
   elements.editStop.disabled = !selectedStopExists;
   elements.deleteStop.disabled = !selectedStopExists;
@@ -182,14 +182,18 @@ function showToast(message) {
 }
 
 function persistDays(days) {
+  let persisted = false;
   try {
-    window.localStorage.setItem(EDIT_STORAGE_KEY, serializeItinerary(days));
-    hasLocalEdits = true;
-    return true;
+    persisted = saveItineraryToStorage(window.localStorage, days);
   } catch {
-    showToast('浏览器无法保存修改，请先导出备份。');
-    return false;
+    persisted = false;
   }
+  hasUnsavedChanges = !persisted;
+  if (persisted) {
+    hasLocalEdits = true;
+    storageRecoveryNeeded = false;
+  }
+  return persisted;
 }
 
 function closeEditor() {
@@ -277,7 +281,7 @@ function renderMap(day) {
       keyboard: true,
       riseOnHover: true,
     });
-    marker.bindTooltip(`${stop.sequence}. ${stop.name}`, { direction: 'top', offset: [0, -30] });
+    marker.bindTooltip(`${stop.sequence}. ${escapeHtml(stop.name)}`, { direction: 'top', offset: [0, -30] });
     marker.on('click', () => {
       state = selectStop(state, stop.id);
       render();
@@ -385,10 +389,12 @@ elements.editorForm.addEventListener('submit', (event) => {
       const days = updateStop(state.days, state.dayId, state.stopId, formDraft());
       state = { ...state, days };
     }
-    persistDays(state.days);
+    const persisted = persistDays(state.days);
     closeEditor();
     render();
-    showToast(mode === 'add' ? '已新增并保存到此设备' : '修改已保存到此设备');
+    showToast(persisted
+      ? mode === 'add' ? '已新增并保存到此设备' : '修改已保存到此设备'
+      : '修改尚未保存，请立即导出备份。');
   } catch (error) {
     elements.editorError.textContent = error instanceof Error ? error.message : '无法保存，请检查输入。';
     elements.editorError.hidden = false;
@@ -405,9 +411,9 @@ elements.deleteStop.addEventListener('click', () => {
   const nextStopId = day.stops[index + 1]?.id || day.stops[index - 1]?.id || '';
   const days = deleteStop(state.days, state.dayId, state.stopId);
   state = { ...state, days, stopId: nextStopId };
-  persistDays(days);
+  const persisted = persistDays(days);
   render();
-  showToast('项目已从此设备删除');
+  showToast(persisted ? '项目已从此设备删除' : '删除尚未保存，请立即导出备份。');
 });
 
 elements.exportEdits.addEventListener('click', () => {
@@ -429,14 +435,20 @@ elements.resetEdits.addEventListener('click', () => {
     showToast('浏览器无法清除本地修改。');
     return;
   }
-  state = createInitialState(parseSavedItinerary('', ITINERARY_DAYS));
+  state = createInitialState(loadSavedItinerary('', ITINERARY_DAYS).days);
   hasLocalEdits = false;
+  hasUnsavedChanges = false;
+  storageRecoveryNeeded = false;
   editMode = false;
   render();
   showToast('已恢复公开版本');
 });
 
 render();
+
+if (storageRecoveryNeeded) {
+  showToast('本地修改无法读取，已安全载入公开版本。');
+}
 
 elements.leafletScript?.addEventListener('load', () => {
   const day = buildDayView(getDayById(state.dayId, state.days));
