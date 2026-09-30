@@ -13,7 +13,7 @@ import {
 } from '../editor-model.js';
 
 test('a new stop is inserted after the selected stop in both timeline and route', () => {
-  const result = insertStopAfter(ITINERARY_DAYS, 'd3', 'eikando', {
+  const result = insertStopAfter(ITINERARY_DAYS, 'd3', 'nanzenji', {
     time: '11:00',
     name: '咖啡休息',
     summary: '哲学之道附近',
@@ -22,9 +22,10 @@ test('a new stop is inserted after the selected stop in both timeline and route'
   }, 'custom-coffee');
   const day = result.find((candidate) => candidate.id === 'd3');
 
-  assert.deepEqual(day.route.slice(0, 4), ['nanzenji', 'eikando', 'custom-coffee', 'philosophers-path-south']);
-  assert.deepEqual(day.stops.slice(0, 4).map((stop) => stop.id), ['nanzenji', 'eikando', 'custom-coffee', 'philosophers-path-south']);
-  assert.deepEqual(day.stops[2].coordinates, [35.016, 135.796]);
+  const expectedStart = ['kyoto-hotel-d3-start', 'tenjuan', 'nanzenji', 'custom-coffee', 'philosophers-path-south'];
+  assert.deepEqual(day.route.slice(0, 5), expectedStart);
+  assert.deepEqual(day.stops.slice(0, 5).map((stop) => stop.id), expectedStart);
+  assert.deepEqual(day.stops[3].coordinates, [35.016, 135.796]);
   assert.equal(ITINERARY_DAYS[2].stops.some((stop) => stop.id === 'custom-coffee'), false);
 });
 
@@ -39,7 +40,7 @@ test('editing a stop preserves its id and removes cleared optional location fiel
     officialUrl: '',
     navigationUrl: '',
   });
-  const stop = result.find((day) => day.id === 'd3').stops[0];
+  const stop = result.find((day) => day.id === 'd3').stops.find((candidate) => candidate.id === 'nanzenji');
 
   assert.equal(stop.id, 'nanzenji');
   assert.equal(stop.name, '南禅寺慢游');

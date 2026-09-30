@@ -16,7 +16,7 @@ test('six-day itinerary preserves confirmed trip order and flight details', () =
   assert.match(JSON.stringify(getDayById('d1')), /HB340/);
   assert.match(JSON.stringify(getDayById('d6')), /UO863/);
   assert.match(JSON.stringify(getDayById('d1')), /备选・未购票/);
-  assert.match(JSON.stringify(getDayById('d2')), /18:00前/);
+  assert.match(JSON.stringify(getDayById('d2')), /17:30前/);
   assert.match(JSON.stringify(getDayById('d5')), /日本环球影城/);
 });
 
@@ -24,6 +24,57 @@ test('Day 4 visits Uji before retrieving luggage and reaching Osaka', () => {
   const stopIds = getDayById('d4').stops.map((stop) => stop.id);
   assert.ok(stopIds.indexOf('byodoin') < stopIds.indexOf('kyoto-hotel-pickup'));
   assert.ok(stopIds.indexOf('kyoto-hotel-pickup') < stopIds.indexOf('osaka-hotel'));
+});
+
+test('Day 2 follows the approved Arashiyama kimono walking loop from and back to the Kyoto hotel', () => {
+  const day = getDayById('d2');
+
+  assert.deepEqual(day.route, [
+    'kyoto-hotel-d2-start',
+    'saga-arashiyama-station',
+    'mocomoco-fitting',
+    'jojakkoji',
+    'mikami-shrine',
+    'bamboo-grove-north',
+    'nonomiya-shrine',
+    'tenryuji',
+    'arashiyama-shopping-street',
+    'togetsukyo',
+    'mocomoco-return',
+    'hankyu-arashiyama',
+    'kyoto-hotel-d2-return',
+  ]);
+  assert.equal(day.stops[0].name, 'GLANSIT 京都河原町');
+  assert.equal(day.stops.at(-1).name, 'GLANSIT 京都河原町');
+  assert.match(JSON.stringify(day), /步行15分钟・上坡/);
+  assert.match(JSON.stringify(day), /步行14分钟/);
+  assert.match(JSON.stringify(day), /京都市右京区嵯峨天龍寺造路町6-2/);
+  assert.ok(day.stops.every((stop) => Array.isArray(stop.coordinates)));
+});
+
+test('Day 3 follows the approved east Kyoto sequence from and back to the hotel', () => {
+  const day = getDayById('d3');
+
+  assert.deepEqual(day.route, [
+    'kyoto-hotel-d3-start',
+    'tenjuan',
+    'nanzenji',
+    'philosophers-path-south',
+    'philosophers-path-north',
+    'ginkakuji',
+    'hachi-shrine',
+    'kyoto-hotel-d3-return',
+  ]);
+  assert.equal(day.stops[0].name, 'GLANSIT 京都河原町');
+  assert.equal(day.stops.at(-1).name, 'GLANSIT 京都河原町');
+  assert.equal(day.stops.some((stop) => stop.id === 'eikando'), false);
+  assert.equal(day.stops.some((stop) => stop.id === 'honenin'), false);
+  assert.ok(day.stops.every((stop) => Array.isArray(stop.coordinates)));
+});
+
+test('Day 1 optional fireworks outing leaves from the Kyoto hotel after check-in', () => {
+  const stopIds = getDayById('d1').route;
+  assert.equal(stopIds[stopIds.indexOf('joyo-fireworks') - 1], 'kyoto-hotel');
 });
 
 test('public links are HTTPS and private booking fields are absent', () => {
@@ -108,7 +159,7 @@ test('day view inserts one navigation leg between every adjacent itinerary item'
 test('mappable stops keep their rendered sequence for numbered markers', () => {
   const view = buildDayView(getDayById('d3'));
 
-  assert.equal(view.mappableStops[0].id, 'nanzenji');
+  assert.equal(view.mappableStops[0].id, 'kyoto-hotel-d3-start');
   assert.equal(view.mappableStops[0].sequence, 1);
 });
 
@@ -119,13 +170,14 @@ test('Day 1 timeline begins with HB340 even though the flight is not mapped', ()
   assert.equal(view.mappableStops[0].id, 'kix-arrival');
 });
 
-test('unconfirmed kimono activities do not expose fake hotel coordinates or navigation', () => {
+test('confirmed MOCOMOCO kimono stops and adjacent legs expose usable navigation', () => {
   const day = buildDayView(getDayById('d2'));
-  const fitting = day.stops.find((stop) => stop.id === 'kyoto-hotel-start');
-  const returnStop = day.stops.find((stop) => stop.id === 'kyoto-hotel-return');
+  const fitting = day.stops.find((stop) => stop.id === 'mocomoco-fitting');
+  const returnStop = day.stops.find((stop) => stop.id === 'mocomoco-return');
 
   for (const stop of [fitting, returnStop]) {
-    assert.equal(stop.coordinates, undefined);
-    assert.equal(stop.navigationUrl, '');
+    assert.ok(Array.isArray(stop.coordinates));
+    assert.match(stop.navigationUrl, /uri\.amap\.com\/marker/);
+    assert.match(stop.nextLeg.walkUrl, /mode=walk/);
   }
 });
