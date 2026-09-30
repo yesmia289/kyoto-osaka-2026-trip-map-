@@ -10,7 +10,7 @@ test('D3 renders one AMap navigation card between every adjacent stop', () => {
   const day = buildDayView(getDayById('d3'));
   const html = renderTimelineHtml(day, day.stops[0].id);
 
-  assert.equal((html.match(/<section class="route-leg(?: is-unavailable)?"/g) || []).length, 7);
+  assert.equal((html.match(/<section class="route-leg(?: is-unavailable)?"/g) || []).length, 10);
   assert.match(html, /uri\.amap\.com\/navigation/);
   assert.match(html, /mode=bus/);
   assert.match(html, /mode=walk/);
@@ -57,6 +57,6 @@ test('saved browser edits derive new route cards after reload', () => {
   const day = buildDayView(getDayById('d3', loaded));
   const html = renderTimelineHtml(day, 'custom-coffee');
 
-  assert.equal((html.match(/<section class="route-leg(?: is-unavailable)?"/g) || []).length, 8);
+  assert.equal((html.match(/<section class="route-leg(?: is-unavailable)?"/g) || []).length, 11);
   assert.match(html, /咖啡休息/);
 });

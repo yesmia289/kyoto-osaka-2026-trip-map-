@@ -22,10 +22,10 @@ test('a new stop is inserted after the selected stop in both timeline and route'
   }, 'custom-coffee');
   const day = result.find((candidate) => candidate.id === 'd3');
 
-  const expectedStart = ['kyoto-hotel-d3-start', 'tenjuan', 'nanzenji', 'custom-coffee', 'philosophers-path-south'];
+  const expectedStart = ['kyoto-hotel-d3-start', 'tenjuan', 'eikando', 'nanzenji', 'custom-coffee'];
   assert.deepEqual(day.route.slice(0, 5), expectedStart);
   assert.deepEqual(day.stops.slice(0, 5).map((stop) => stop.id), expectedStart);
-  assert.deepEqual(day.stops[3].coordinates, [35.016, 135.796]);
+  assert.deepEqual(day.stops.find((stop) => stop.id === 'custom-coffee').coordinates, [35.016, 135.796]);
   assert.equal(ITINERARY_DAYS[2].stops.some((stop) => stop.id === 'custom-coffee'), false);
 });
 

@@ -52,23 +52,30 @@ test('Day 2 follows the approved Arashiyama kimono walking loop from and back to
   assert.ok(day.stops.every((stop) => Array.isArray(stop.coordinates)));
 });
 
-test('Day 3 follows the approved east Kyoto sequence from and back to the hotel', () => {
+test('Day 3 follows the approved Nanzenji and Kifune sequence from and back to the hotel', () => {
   const day = getDayById('d3');
 
   assert.deepEqual(day.route, [
     'kyoto-hotel-d3-start',
     'tenjuan',
+    'eikando',
     'nanzenji',
-    'philosophers-path-south',
-    'philosophers-path-north',
-    'ginkakuji',
-    'hachi-shrine',
+    'nanzenji-lunch',
+    'takaragaike-outbound',
+    'kibuneguchi-outbound',
+    'kifune-shrine',
+    'kibuneguchi-return',
+    'takaragaike-return',
     'kyoto-hotel-d3-return',
   ]);
   assert.equal(day.stops[0].name, 'GLANSIT 京都河原町');
   assert.equal(day.stops.at(-1).name, 'GLANSIT 京都河原町');
-  assert.equal(day.stops.some((stop) => stop.id === 'eikando'), false);
-  assert.equal(day.stops.some((stop) => stop.id === 'honenin'), false);
+  assert.equal(day.stops.some((stop) => stop.id === 'philosophers-path-south'), false);
+  assert.equal(day.stops.some((stop) => stop.id === 'ginkakuji'), false);
+  assert.match(JSON.stringify(day), /普通票500日元/);
+  assert.match(JSON.stringify(day), /普通票1,000日元/);
+  assert.match(JSON.stringify(day), /末班17:38/);
+  assert.match(JSON.stringify(day), /约18:40–19:00/);
   assert.ok(day.stops.every((stop) => Array.isArray(stop.coordinates)));
 });
 
