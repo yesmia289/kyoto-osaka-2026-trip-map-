@@ -42,14 +42,16 @@ export function buildDayView(day) {
     return leftIndex - rightIndex;
   });
 
-  return {
-    ...day,
-    stops: stops.map((stop, index) => ({
+  const renderedStops = stops.map((stop, index) => ({
       ...stop,
       sequence: index + 1,
       navigationUrl: buildNavigationUrl(stop),
-    })),
-    mappableStops: getMappableStops({ ...day, stops }),
+    }));
+
+  return {
+    ...day,
+    stops: renderedStops,
+    mappableStops: getMappableStops({ ...day, stops: renderedStops }),
   };
 }
 

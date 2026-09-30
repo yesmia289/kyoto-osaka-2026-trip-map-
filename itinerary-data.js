@@ -9,7 +9,7 @@ export const ITINERARY_DAYS = [
     summary: 'HB340 抵达关西机场，傍晚入住河原町；花火仅在提前购票且未延误时前往。',
     status: { tone: 'warning', label: '花火：备选・未购票' },
     map: { center: [34.9305, 135.691], zoom: 9 },
-    route: ['kix-arrival', 'kyoto-station', 'kyoto-hotel', 'joyo-fireworks'],
+    route: ['hb340', 'kix-arrival', 'kyoto-station', 'kyoto-hotel', 'joyo-fireworks'],
     stops: [
       {
         id: 'hb340',

@@ -66,3 +66,17 @@ test('navigation URL uses explicit HTTPS link or coordinate fallback', () => {
   );
   assert.equal(buildNavigationUrl({ name: '未定地点' }), '');
 });
+
+test('mappable stops keep their rendered sequence for numbered markers', () => {
+  const view = buildDayView(getDayById('d3'));
+
+  assert.equal(view.mappableStops[0].id, 'nanzenji');
+  assert.equal(view.mappableStops[0].sequence, 1);
+});
+
+test('Day 1 timeline begins with HB340 even though the flight is not mapped', () => {
+  const view = buildDayView(getDayById('d1'));
+
+  assert.equal(view.stops[0].id, 'hb340');
+  assert.equal(view.mappableStops[0].id, 'kix-arrival');
+});

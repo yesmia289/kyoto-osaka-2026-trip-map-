@@ -121,7 +121,17 @@ function render() {
 let map;
 let routeLayer;
 
-function renderMap() {
+function markerIcon(sequence, selected) {
+  return window.L.divIcon({
+    className: 'trip-marker-shell',
+    html: `<span class="trip-marker${selected ? ' is-selected' : ''}"><b>${sequence}</b></span>`,
+    iconSize: [38, 42],
+    iconAnchor: [19, 38],
+    popupAnchor: [0, -34],
+  });
+}
+
+function renderMap(day) {
   if (!window.L) {
     elements.mapFallback.hidden = false;
     return;
@@ -134,9 +144,50 @@ function renderMap() {
       attribution: '&copy; OpenStreetMap contributors',
       maxZoom: 19,
     }).addTo(map);
+    routeLayer = window.L.layerGroup().addTo(map);
   }
 
-  if (routeLayer) routeLayer.clearLayers();
+  routeLayer.clearLayers();
+  const locations = day.mappableStops;
+
+  for (const stop of locations) {
+    const marker = window.L.marker(stop.coordinates, {
+      alt: `${stop.sequence}. ${stop.name}`,
+      icon: markerIcon(stop.sequence, stop.id === state.stopId),
+      keyboard: true,
+      riseOnHover: true,
+    });
+    marker.bindTooltip(`${stop.sequence}. ${stop.name}`, { direction: 'top', offset: [0, -30] });
+    marker.on('click', () => {
+      state = selectStop(state, stop.id);
+      render();
+      document.querySelector(`[data-stop-id="${CSS.escape(stop.id)}"]`)?.scrollIntoView({ block: 'nearest' });
+    });
+    marker.addTo(routeLayer);
+  }
+
+  if (locations.length >= 2) {
+    window.L.polyline(locations.map((stop) => stop.coordinates), {
+      color: '#e45d3c',
+      weight: 4,
+      opacity: 0.9,
+      lineJoin: 'round',
+      dashArray: '1 10',
+    }).addTo(routeLayer);
+  }
+
+  if (locations.length) {
+    const bounds = window.L.latLngBounds(locations.map((stop) => stop.coordinates));
+    if (locations.length === 1) {
+      map.setView(locations[0].coordinates, day.map?.zoom ?? 14);
+    } else {
+      map.fitBounds(bounds, { paddingTopLeft: [34, 228], paddingBottomRight: [34, 390], maxZoom: 14 });
+    }
+  } else {
+    map.setView(day.map?.center ?? [35.0116, 135.7681], day.map?.zoom ?? 12);
+  }
+
+  window.setTimeout(() => map.invalidateSize({ pan: false }), 0);
 }
 
 elements.dayTabs.addEventListener('click', (event) => {
@@ -156,11 +207,16 @@ elements.timeline.addEventListener('click', (event) => {
 });
 
 elements.sheetHandle.addEventListener('click', () => {
+  if (dragHandled) {
+    dragHandled = false;
+    return;
+  }
   state = setSheetExpanded(state, !state.sheetExpanded);
   render();
 });
 
 let dragStartY;
+let dragHandled = false;
 elements.sheetHandle.addEventListener('pointerdown', (event) => {
   dragStartY = event.clientY;
   elements.sheetHandle.setPointerCapture(event.pointerId);
@@ -170,10 +226,16 @@ elements.sheetHandle.addEventListener('pointerup', (event) => {
   if (dragStartY === undefined) return;
   const movement = event.clientY - dragStartY;
   if (Math.abs(movement) > 24) {
+    dragHandled = true;
     state = setSheetExpanded(state, movement < 0);
     render();
   }
   dragStartY = undefined;
+});
+
+elements.sheetHandle.addEventListener('pointercancel', () => {
+  dragStartY = undefined;
+  dragHandled = false;
 });
 
 render();
