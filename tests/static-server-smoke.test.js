@@ -23,6 +23,8 @@ test('the static site serves its accessible shell and module assets', async (t) 
     'the text itinerary module must not wait for Leaflet',
   );
   assert.match(css, /\.sheet-handle\s*\{[^}]*touch-action:\s*none/s);
+  assert.match(css, /\.day-tab\[aria-current="date"\]/);
+  assert.doesNotMatch(css, /\.day-tab\[aria-selected="true"\]/);
   assert.match(app, /captureInteractiveFocus/);
   assert.match(app, /restoreInteractiveFocus/);
   assert.match(html, /id="map"/);
