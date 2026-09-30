@@ -9,6 +9,7 @@ import {
 } from './trip-model.js';
 import { captureInteractiveFocus, restoreInteractiveFocus } from './focus-management.js';
 import { escapeHtml } from './html-utils.js';
+import { isTimelineLinkTarget, renderTimelineHtml } from './timeline-view.js';
 import {
   EDIT_STORAGE_KEY,
   deleteStop,
@@ -74,12 +75,6 @@ let hasUnsavedChanges = false;
 let storageRecoveryNeeded = Boolean(savedItinerary) && !loadedItinerary.valid;
 let toastTimer;
 
-function externalLink(url, label, primary = false) {
-  if (!url) return '';
-  const className = primary ? 'stop-link stop-link--primary' : 'stop-link';
-  return `<a class="${className}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)} <span aria-hidden="true">↗</span></a>`;
-}
-
 function renderDayTabs() {
   elements.dayTabs.innerHTML = state.days.map((day, index) => `
     <button
@@ -92,40 +87,6 @@ function renderDayTabs() {
       <span>${escapeHtml(day.date.replace('月', '/').replace('日', ''))}</span>
     </button>
   `).join('');
-}
-
-function renderTimeline(day) {
-  elements.timeline.innerHTML = day.stops.map((stop) => {
-    const selected = stop.id === state.stopId;
-    const status = stop.status
-      ? `<span class="status-badge" data-tone="${escapeHtml(stop.status.tone)}">${escapeHtml(stop.status.label)}</span>`
-      : '';
-    const details = selected ? `
-      <div class="stop-detail">
-        <p>${escapeHtml(stop.detail || stop.summary || '')}</p>
-        ${status}
-        <div class="stop-actions">
-          ${externalLink(stop.navigationUrl, '打开导航', true)}
-          ${externalLink(stop.officialUrl, '官方信息')}
-          ${externalLink(stop.ticketUrl, '门票信息')}
-        </div>
-      </div>
-    ` : '';
-
-    return `
-      <li class="timeline-item${selected ? ' is-selected' : ''}" data-stop-id="${escapeHtml(stop.id)}">
-        <span class="timeline-marker" aria-hidden="true">${stop.sequence}</span>
-        <div class="timeline-card">
-          <button class="timeline-button" type="button" aria-expanded="${selected}">
-            <span class="timeline-time">${escapeHtml(stop.time || '弹性')}</span>
-            <span class="timeline-title">${escapeHtml(stop.name)}</span>
-            <span class="timeline-summary">${escapeHtml(stop.summary || '')}</span>
-          </button>
-          ${details}
-        </div>
-      </li>
-    `;
-  }).join('');
 }
 
 function render() {
@@ -167,7 +128,7 @@ function render() {
   }
 
   renderDayTabs();
-  renderTimeline(day);
+  elements.timeline.innerHTML = renderTimelineHtml(day, state.stopId);
   renderMap(day);
   restoreInteractiveFocus(focusToken, elements.dayTabs, elements.timeline);
 }
@@ -323,6 +284,7 @@ elements.dayTabs.addEventListener('click', (event) => {
 });
 
 elements.timeline.addEventListener('click', (event) => {
+  if (isTimelineLinkTarget(event.target)) return;
   const item = event.target.closest('[data-stop-id]');
   if (!item) return;
   state = selectStop(state, item.dataset.stopId);

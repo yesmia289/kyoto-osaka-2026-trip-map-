@@ -14,6 +14,24 @@ export function getMappableStops(day) {
   ));
 }
 
+function hasCoordinates(stop) {
+  if (!Array.isArray(stop?.coordinates) || stop.coordinates.length !== 2) return false;
+  const [latitude, longitude] = stop.coordinates;
+  return (
+    Number.isFinite(latitude)
+    && Number.isFinite(longitude)
+    && latitude >= -90
+    && latitude <= 90
+    && longitude >= -180
+    && longitude <= 180
+  );
+}
+
+function amapPosition(stop) {
+  const [latitude, longitude] = stop.coordinates;
+  return `${longitude},${latitude}`;
+}
+
 export function buildNavigationUrl(stop) {
   if (stop?.navigationUrl) {
     try {
@@ -24,12 +42,34 @@ export function buildNavigationUrl(stop) {
     }
   }
 
-  if (Array.isArray(stop?.coordinates) && stop.coordinates.length === 2) {
-    const query = encodeURIComponent(stop.coordinates.join(','));
-    return `https://www.google.com/maps/search/?api=1&query=${query}`;
+  if (hasCoordinates(stop)) {
+    const url = new URL('https://uri.amap.com/marker');
+    url.search = new URLSearchParams({
+      position: amapPosition(stop),
+      name: stop.name || '行程地点',
+      src: 'kyoto-osaka-2026-trip-map',
+      coordinate: 'wgs84',
+      callnative: '1',
+    }).toString();
+    return url.toString();
   }
 
   return '';
+}
+
+export function buildAmapRouteUrl(from, to, mode = 'bus') {
+  if (!hasCoordinates(from) || !hasCoordinates(to)) return '';
+  const travelMode = new Set(['car', 'bus', 'walk', 'ride']).has(mode) ? mode : 'bus';
+  const url = new URL('https://uri.amap.com/navigation');
+  url.search = new URLSearchParams({
+    from: `${amapPosition(from)},${from.name || '起点'}`,
+    to: `${amapPosition(to)},${to.name || '终点'}`,
+    mode: travelMode,
+    policy: '0',
+    src: 'kyoto-osaka-2026-trip-map',
+    callnative: '1',
+  }).toString();
+  return url.toString();
 }
 
 export function buildDayView(day) {
@@ -42,11 +82,26 @@ export function buildDayView(day) {
     return leftIndex - rightIndex;
   });
 
-  const renderedStops = stops.map((stop, index) => ({
+  const numberedStops = stops.map((stop, index) => ({
       ...stop,
       sequence: index + 1,
       navigationUrl: buildNavigationUrl(stop),
     }));
+  const renderedStops = numberedStops.map((stop, index) => {
+    const nextStop = numberedStops[index + 1];
+    if (!nextStop) return stop;
+    const busUrl = buildAmapRouteUrl(stop, nextStop, 'bus');
+    return {
+      ...stop,
+      nextLeg: {
+        fromName: stop.name,
+        toName: nextStop.name,
+        available: Boolean(busUrl),
+        busUrl,
+        walkUrl: buildAmapRouteUrl(stop, nextStop, 'walk'),
+      },
+    };
+  });
 
   return {
     ...day,

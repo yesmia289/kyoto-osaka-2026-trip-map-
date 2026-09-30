@@ -534,6 +534,78 @@ a:focus-visible {
   color: var(--paper);
 }
 
+.route-leg {
+  grid-row: 2;
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr);
+  gap: 9px;
+  margin: 14px 0 -7px;
+  padding: 12px;
+  border: 1px dashed rgba(23, 63, 44, 0.22);
+  border-radius: 13px;
+  background: #f7faf7;
+}
+
+.route-leg__icon {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sage);
+  color: var(--green);
+  font-weight: 900;
+}
+
+.route-leg__body,
+.route-leg__eyebrow,
+.route-leg__hint {
+  display: block;
+  min-width: 0;
+}
+
+.route-leg__eyebrow {
+  color: var(--vermilion);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+}
+
+.route-leg strong {
+  display: block;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+  color: var(--green);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.route-leg__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.route-leg__actions .stop-link {
+  min-height: 44px;
+  padding: 7px 10px;
+  font-size: 0.69rem;
+}
+
+.route-leg__hint {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.69rem;
+  line-height: 1.4;
+}
+
+.route-leg.is-unavailable {
+  border-style: solid;
+  opacity: 0.78;
+}
+
 .leaflet-control-zoom {
   margin-top: 220px !important;
   border: 0 !important;
@@ -553,8 +625,8 @@ a:focus-visible {
 }
 
 .leaflet-bottom.leaflet-right {
-  top: calc(218px + env(safe-area-inset-top));
-  bottom: auto;
+  top: calc(218px + env(safe-area-inset-top)) !important;
+  bottom: auto !important;
 }
 
 .trip-marker-shell {
@@ -770,7 +842,7 @@ a:focus-visible {
   }
 
   .leaflet-bottom.leaflet-right {
-    top: calc(190px + env(safe-area-inset-top));
+    top: calc(190px + env(safe-area-inset-top)) !important;
   }
 }
 
