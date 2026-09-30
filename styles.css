@@ -476,6 +476,11 @@ a:focus-visible {
   font-size: 9px !important;
 }
 
+.leaflet-bottom.leaflet-right {
+  top: calc(218px + env(safe-area-inset-top));
+  bottom: auto;
+}
+
 .trip-marker-shell {
   border: 0;
   background: transparent;
@@ -550,6 +555,10 @@ a:focus-visible {
 
   .leaflet-control-zoom {
     margin-top: 195px !important;
+  }
+
+  .leaflet-bottom.leaflet-right {
+    top: calc(190px + env(safe-area-inset-top));
   }
 }
 
