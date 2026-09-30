@@ -1,6 +1,7 @@
 .DS_Store
 .superpowers/
 .worktrees/
+node_modules/
 skills/
 work/
 outputs/
