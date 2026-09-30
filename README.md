@@ -36,11 +36,8 @@ npm run serve
 
 ## GitHub Pages
 
-网站不需要构建，直接从默认分支根目录发布：
+网站不需要构建。推送到 `main` 后，`.github/workflows/pages.yml` 会将仓库根目录部署到 GitHub Pages。
 
-1. 在仓库设置中打开 **Pages**。
-2. Source 选择 **Deploy from a branch**。
-3. Branch 选择默认分支，目录选择 `/ (root)`。
-4. 保存后等待 GitHub 返回公开网址。
+如果自动启用 Pages 被仓库策略阻止，可在仓库设置的 **Pages** 中将 Source 选择为 **GitHub Actions**，再重新运行工作流。
 
 Leaflet JavaScript 从官方 CDN 加载；关键地图布局样式已保存在 `leaflet-base.css`。若地图脚本或瓦片临时不可用，文字行程和导航链接仍可独立使用。
