@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#173f2c">
+    <meta name="description" content="2026 京都大阪六日行程地图：每天路线、交通、导航和票务提醒。">
+    <title>京都大阪六日行程地图</title>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://tile.openstreetmap.org">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynhtLkMUwRZ9PvXBKjMZqkZIfpI=" crossorigin="">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="trip-app" aria-label="京都大阪六日行程">
+      <section class="map-panel" aria-label="当日路线地图">
+        <div id="map" role="application" aria-label="互动行程地图"></div>
+        <div class="map-wash" aria-hidden="true"></div>
+
+        <header class="trip-header">
+          <div class="trip-header__topline">
+            <p class="brand-mark">KANSAI · 2026</p>
+            <p class="trip-count"><span id="current-day-number">1</span> / 6 DAYS</p>
+          </div>
+          <h1 id="trip-title">京都大阪<br>六日漫游</h1>
+          <p id="trip-subtitle" class="trip-header__subtitle">地图、交通与每日节奏，都放在一张随身行程里。</p>
+        </header>
+
+        <nav class="day-switcher" aria-label="选择行程日期">
+          <div id="day-tabs" class="day-switcher__track" role="tablist"></div>
+        </nav>
+
+        <div id="map-fallback" class="map-fallback" role="status" hidden>
+          <strong>地图暂时没有加载</strong>
+          <span>下方行程与导航链接仍可正常使用。</span>
+        </div>
+      </section>
+
+      <section id="itinerary-sheet" class="itinerary-sheet" aria-labelledby="day-title">
+        <button id="sheet-handle" class="sheet-handle" type="button" aria-label="展开当天行程" aria-expanded="false">
+          <span aria-hidden="true"></span>
+        </button>
+
+        <div class="sheet-heading">
+          <div>
+            <p id="day-meta" class="sheet-heading__meta"></p>
+            <h2 id="day-title"></h2>
+          </div>
+          <span id="day-status" class="status-badge" hidden></span>
+        </div>
+
+        <p id="day-summary" class="day-summary"></p>
+        <div class="route-strip" aria-label="当天路线摘要">
+          <span class="route-strip__dot" aria-hidden="true"></span>
+          <strong id="day-route"></strong>
+        </div>
+
+        <ol id="timeline" class="timeline" aria-label="当天时间线"></ol>
+      </section>
+    </main>
+
+    <noscript>请启用 JavaScript 查看日期切换与地图；行程数据保存在 itinerary-data.js。</noscript>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

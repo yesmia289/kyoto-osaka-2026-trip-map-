@@ -52,3 +52,35 @@ export function buildDayView(day) {
     mappableStops: getMappableStops({ ...day, stops }),
   };
 }
+
+export function createInitialState(days = ITINERARY_DAYS) {
+  const firstDay = days[0];
+  return {
+    days,
+    dayId: firstDay?.id ?? '',
+    stopId: firstDay?.stops?.[0]?.id ?? '',
+    sheetExpanded: false,
+  };
+}
+
+export function selectDay(state, dayId) {
+  const nextDay = getDayById(dayId, state.days);
+  if (!nextDay) return state;
+
+  return {
+    ...state,
+    dayId: nextDay.id,
+    stopId: nextDay.stops?.[0]?.id ?? '',
+  };
+}
+
+export function selectStop(state, stopId) {
+  const day = getDayById(state.dayId, state.days);
+  if (!day?.stops?.some((stop) => stop.id === stopId)) return state;
+
+  return { ...state, stopId };
+}
+
+export function setSheetExpanded(state, sheetExpanded) {
+  return { ...state, sheetExpanded: Boolean(sheetExpanded) };
+}
