@@ -1,10 +1,15 @@
 {
   "name": "kyoto-osaka-2026-trip-map",
   "version": "1.0.0",
+  "description": "Mobile-first Kyoto and Osaka six-day itinerary map",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "test": "node --test",
+    "test:smoke": "node --test tests/static-server-smoke.test.js",
     "serve": "python3 -m http.server 8000"
   }
 }
