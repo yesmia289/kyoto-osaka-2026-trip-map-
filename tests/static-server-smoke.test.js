@@ -39,6 +39,7 @@ test('the static site serves its accessible shell and module assets', async (t) 
   assert.doesNotMatch(publicSource, /sg-webapi\.opnavi\.com/);
   assert.doesNotMatch(publicSource, /securityJsCode|_AMapSecurityConfig/);
   assert.doesNotMatch(publicSource, /webapi\.amap\.com\/maps[^"'\s]*[?&]key=/);
+  assert.doesNotMatch(publicSource, /maps\.googleapis\.com/);
   assert.match(app, /captureInteractiveFocus/);
   assert.match(app, /restoreInteractiveFocus/);
   assert.match(html, /id="map"/);
@@ -47,5 +48,5 @@ test('the static site serves its accessible shell and module assets', async (t) 
   assert.match(html, /id="editor-toolbar"/);
   assert.match(html, /<dialog[^>]+id="stop-editor"/);
   assert.match(app, /renderTimelineHtml/);
-  assert.match(publicSource, /buildAmapRouteUrl|nextLeg/);
+  assert.match(publicSource, /buildGoogleMapsRouteUrl|nextLeg/);
 });

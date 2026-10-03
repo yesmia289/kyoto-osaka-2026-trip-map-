@@ -6,14 +6,15 @@ import { insertStopAfter, loadSavedItinerary, serializeItinerary } from '../edit
 import { buildDayView, getDayById } from '../trip-model.js';
 import { isTimelineLinkTarget, renderTimelineHtml } from '../timeline-view.js';
 
-test('D3 renders one AMap navigation card between every adjacent stop', () => {
+test('D3 renders one Google Maps navigation card between every adjacent stop', () => {
   const day = buildDayView(getDayById('d3'));
   const html = renderTimelineHtml(day, day.stops[0].id);
 
   assert.equal((html.match(/<section class="route-leg(?: is-unavailable)?"/g) || []).length, 10);
-  assert.match(html, /uri\.amap\.com\/navigation/);
-  assert.match(html, /mode=bus/);
-  assert.match(html, /mode=walk/);
+  assert.match(html, /www\.google\.com\/maps\/dir/);
+  assert.match(html, /travelmode=transit/);
+  assert.match(html, /travelmode=walking/);
+  assert.match(html, /公共交通/);
 });
 
 test('missing coordinates render an informational group without false links or nav landmark', () => {

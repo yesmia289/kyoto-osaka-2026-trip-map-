@@ -27,9 +27,9 @@ function hasCoordinates(stop) {
   );
 }
 
-function amapPosition(stop) {
+function googleMapsPosition(stop) {
   const [latitude, longitude] = stop.coordinates;
-  return `${longitude},${latitude}`;
+  return `${latitude},${longitude}`;
 }
 
 export function buildNavigationUrl(stop) {
@@ -43,13 +43,10 @@ export function buildNavigationUrl(stop) {
   }
 
   if (hasCoordinates(stop)) {
-    const url = new URL('https://uri.amap.com/marker');
+    const url = new URL('https://www.google.com/maps/search/');
     url.search = new URLSearchParams({
-      position: amapPosition(stop),
-      name: stop.name || '行程地点',
-      src: 'kyoto-osaka-2026-trip-map',
-      coordinate: 'wgs84',
-      callnative: '1',
+      api: '1',
+      query: googleMapsPosition(stop),
     }).toString();
     return url.toString();
   }
@@ -57,17 +54,16 @@ export function buildNavigationUrl(stop) {
   return '';
 }
 
-export function buildAmapRouteUrl(from, to, mode = 'bus') {
+export function buildGoogleMapsRouteUrl(from, to, mode = 'transit') {
   if (!hasCoordinates(from) || !hasCoordinates(to)) return '';
-  const travelMode = new Set(['car', 'bus', 'walk', 'ride']).has(mode) ? mode : 'bus';
-  const url = new URL('https://uri.amap.com/navigation');
+  const travelMode = new Set(['driving', 'walking', 'bicycling', 'transit']).has(mode) ? mode : 'transit';
+  const url = new URL('https://www.google.com/maps/dir/');
   url.search = new URLSearchParams({
-    from: `${amapPosition(from)},${from.name || '起点'}`,
-    to: `${amapPosition(to)},${to.name || '终点'}`,
-    mode: travelMode,
-    policy: '0',
-    src: 'kyoto-osaka-2026-trip-map',
-    callnative: '1',
+    api: '1',
+    origin: googleMapsPosition(from),
+    destination: googleMapsPosition(to),
+    travelmode: travelMode,
+    dir_action: 'navigate',
   }).toString();
   return url.toString();
 }
@@ -90,15 +86,15 @@ export function buildDayView(day) {
   const renderedStops = numberedStops.map((stop, index) => {
     const nextStop = numberedStops[index + 1];
     if (!nextStop) return stop;
-    const busUrl = buildAmapRouteUrl(stop, nextStop, 'bus');
+    const transitUrl = buildGoogleMapsRouteUrl(stop, nextStop, 'transit');
     return {
       ...stop,
       nextLeg: {
         fromName: stop.name,
         toName: nextStop.name,
-        available: Boolean(busUrl),
-        busUrl,
-        walkUrl: buildAmapRouteUrl(stop, nextStop, 'walk'),
+        available: Boolean(transitUrl),
+        transitUrl,
+        walkUrl: buildGoogleMapsRouteUrl(stop, nextStop, 'walking'),
       },
     };
   });

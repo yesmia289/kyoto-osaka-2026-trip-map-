@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 
 import { ITINERARY_DAYS } from '../itinerary-data.js';
 import {
-  buildAmapRouteUrl,
   buildDayView,
+  buildGoogleMapsRouteUrl,
   buildNavigationUrl,
   getDayById,
   getMappableStops,
@@ -114,33 +114,32 @@ test('a day without coordinates still builds a readable view', () => {
   assert.deepEqual(buildDayView(day).stops.map((stop) => stop.id), ['note']);
 });
 
-test('navigation URL uses explicit HTTPS link or AMap coordinate fallback', () => {
+test('navigation URL uses explicit HTTPS link or Google Maps coordinate fallback', () => {
   assert.equal(
     buildNavigationUrl({ navigationUrl: 'https://maps.google.com/?q=Kyoto' }),
     'https://maps.google.com/?q=Kyoto',
   );
   const url = new URL(buildNavigationUrl({ name: '京都站', coordinates: [34.985849, 135.758767] }));
-  assert.equal(url.origin + url.pathname, 'https://uri.amap.com/marker');
-  assert.equal(url.searchParams.get('position'), '135.758767,34.985849');
-  assert.equal(url.searchParams.get('name'), '京都站');
-  assert.equal(url.searchParams.get('coordinate'), 'wgs84');
-  assert.equal(url.searchParams.get('callnative'), '1');
+  assert.equal(url.origin + url.pathname, 'https://www.google.com/maps/search/');
+  assert.equal(url.searchParams.get('api'), '1');
+  assert.equal(url.searchParams.get('query'), '34.985849,135.758767');
   assert.equal(buildNavigationUrl({ name: '未定地点' }), '');
 });
 
-test('AMap route URLs describe an adjacent pair and selected travel mode', () => {
+test('Google Maps route URLs describe an adjacent pair and selected travel mode', () => {
   const from = { id: 'kyoto-station', name: '京都站', coordinates: [34.985849, 135.758767] };
   const to = { id: 'kyoto-hotel', name: 'GLANSIT 京都河原町', coordinates: [35.00455, 135.76955] };
-  const url = new URL(buildAmapRouteUrl(from, to, 'bus'));
+  const url = new URL(buildGoogleMapsRouteUrl(from, to, 'transit'));
 
-  assert.equal(url.origin + url.pathname, 'https://uri.amap.com/navigation');
-  assert.equal(url.searchParams.get('from'), '135.758767,34.985849,京都站');
-  assert.equal(url.searchParams.get('to'), '135.76955,35.00455,GLANSIT 京都河原町');
-  assert.equal(url.searchParams.get('mode'), 'bus');
-  assert.equal(url.searchParams.get('callnative'), '1');
-  assert.equal(buildAmapRouteUrl(from, { name: '未定地点' }, 'walk'), '');
-  assert.equal(buildAmapRouteUrl(from, { name: '越界', coordinates: [91, 135] }, 'walk'), '');
-  assert.equal(buildAmapRouteUrl(from, { name: '越界', coordinates: [35, 181] }, 'walk'), '');
+  assert.equal(url.origin + url.pathname, 'https://www.google.com/maps/dir/');
+  assert.equal(url.searchParams.get('api'), '1');
+  assert.equal(url.searchParams.get('origin'), '34.985849,135.758767');
+  assert.equal(url.searchParams.get('destination'), '35.00455,135.76955');
+  assert.equal(url.searchParams.get('travelmode'), 'transit');
+  assert.equal(url.searchParams.get('dir_action'), 'navigate');
+  assert.equal(buildGoogleMapsRouteUrl(from, { name: '未定地点' }, 'walking'), '');
+  assert.equal(buildGoogleMapsRouteUrl(from, { name: '越界', coordinates: [91, 135] }, 'walking'), '');
+  assert.equal(buildGoogleMapsRouteUrl(from, { name: '越界', coordinates: [35, 181] }, 'walking'), '');
 });
 
 test('day view inserts one navigation leg between every adjacent itinerary item', () => {
@@ -155,8 +154,8 @@ test('day view inserts one navigation leg between every adjacent itinerary item'
   });
 
   assert.equal(view.stops[0].nextLeg.toName, '中间点');
-  assert.match(view.stops[0].nextLeg.busUrl, /mode=bus/);
-  assert.match(view.stops[0].nextLeg.walkUrl, /mode=walk/);
+  assert.match(view.stops[0].nextLeg.transitUrl, /travelmode=transit/);
+  assert.match(view.stops[0].nextLeg.walkUrl, /travelmode=walking/);
   assert.equal(view.stops[0].nextLeg.available, true);
   assert.equal(view.stops[1].nextLeg.toName, '待定地点');
   assert.equal(view.stops[1].nextLeg.available, false);
@@ -184,7 +183,7 @@ test('confirmed MOCOMOCO kimono stops and adjacent legs expose usable navigation
 
   for (const stop of [fitting, returnStop]) {
     assert.ok(Array.isArray(stop.coordinates));
-    assert.match(stop.navigationUrl, /uri\.amap\.com\/marker/);
-    assert.match(stop.nextLeg.walkUrl, /mode=walk/);
+    assert.match(stop.navigationUrl, /www\.google\.com\/maps\/search/);
+    assert.match(stop.nextLeg.walkUrl, /travelmode=walking/);
   }
 });

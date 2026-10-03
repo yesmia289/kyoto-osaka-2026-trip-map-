@@ -31,7 +31,7 @@ export function renderTimelineHtml(day, selectedStopId) {
           <strong>${escapeHtml(stop.name)} <span aria-hidden="true">→</span> ${escapeHtml(stop.nextLeg.toName)}</strong>
           ${stop.nextLeg.available ? `
             <span class="route-leg__actions">
-              ${externalLink(stop.nextLeg.busUrl, '公交导航', true)}
+              ${externalLink(stop.nextLeg.transitUrl, '公共交通', true)}
               ${externalLink(stop.nextLeg.walkUrl, '步行导航')}
             </span>
           ` : '<span class="route-leg__hint">补充起点和终点坐标后可导航</span>'}
